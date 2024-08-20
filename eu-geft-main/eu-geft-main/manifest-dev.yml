@@ -1,0 +1,18 @@
+---
+applications:
+  - name: geft-finance-credit-dev
+    instances: 1
+    memory: 1024M
+    buildpacks:
+      - java_buildpack_offline
+    path: build/libs/vehicle-financing-credit-application-0.0.1-SNAPSHOT.jar
+    env:
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
+      SPRING_PROFILES_ACTIVE: dev
+      JAVA_OPTS: '-Dhttps.proxyHost=internet.ford.com -Dhttps.proxyPort=83 -Dhttps.nonProxyHosts="localhost|127.0.0.1|19.0.0.0/8|10.0.0.0/8|172.16.0.0/12|*.ford.com" -Dhttp.proxyHost=internet.ford.com -Dhttp.proxyPort=83 -Dhttp.nonProxyHosts="localhost|127.0.0.1|19.0.0.0/8|10.0.0.0/8|172.16.0.0/12|*.ford.com"'
+    services:
+      - ial-finance-credit-dev-config-server
+      #            - ial-dev-splunk
+    routes:
+      - route: geft-finance-credit-dev.apps.pp01i.edc1.cf.ford.com
+      - route: geft-finance-credit-dev.apps.edcpp02.cf.ford.com

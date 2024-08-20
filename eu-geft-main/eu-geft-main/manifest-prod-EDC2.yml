@@ -1,0 +1,27 @@
+---
+applications:
+  - name: eu-geft-prod
+    instances: 1
+    memory: 1024M
+    buildpacks:
+      - java_buildpack_offline
+    path: build/libs/eu-geft-0.0.1-SNAPSHOT.jar
+    env:
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_OPTS: '-Dhttps.proxyHost=internet.ford.com -Dhttps.proxyPort=83 -Dhttps.nonProxyHosts="localhost|127.0.0.1|19.0.0.0/8|10.0.0.0/8|172.16.0.0/12|*.ford.com" -Dhttp.proxyHost=internet.ford.com -Dhttp.proxyPort=83 -Dhttp.nonProxyHosts="localhost|127.0.0.1|19.0.0.0/8|10.0.0.0/8|172.16.0.0/12|*.ford.com"'
+    services:
+      - eu-geft-prod-config-server
+      #            - ial-dev-splunk
+    routes:
+      - route: eu-geft-prod.apps.pd01i.edc2.cf.ford.com
+      - route: eu-geft-prod.apps.edcpd02.cf.ford.com
+      - route: www.checkout.ford.co.uk
+      - route: www.checkout.ford.fr
+      - route: www.checkout.ford.de
+      - route: www.checkout.ford.it
+      - route: www.checkout.ford.es
+      - route: checkout-eu.cf.app.ford.com
+      - route: checkout-eu.prod.cf.app.ford.com
+#      - route: www.checkout.ford.com
+#      - route: www-checkout.cf.app.ford.com

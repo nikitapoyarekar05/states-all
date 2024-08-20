@@ -1,0 +1,144 @@
+final String genericCredentialId = "eu-geft-jenkins"
+final String githubRepo = "git@github.ford.com:global-ecommerce-finance-tech/eu-geft.git"
+
+pipeline {
+    agent any
+
+    options {
+        parallelsAlwaysFailFast()
+    }
+
+    environment {
+        def cfCliTool = tool name: 'cf_cli_7_2_0', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
+        CF_HOME = "$WORKSPACE"
+
+        def CHROME_PATH = tool name: 'chrome_88', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
+        def FIREFOX_PATH = tool name: 'firefox_91', type: 'com.cloudbees.jenkins.plugins.customtools.CustomTool'
+        def NODEJS_HOME = "${tool 'NodeJS_14'}"
+        PATH = "${NODEJS_HOME}:${cfCliTool}:${CHROME_PATH}:${FIREFOX_PATH}:${env.PATH}"
+
+        CI = true
+        no_proxy = "localhost,127.0.0.1,19.0.0.0/8,10.0.0.0/8,172.16.0.0/12,.ford.com"
+        NO_PROXY = "localhost,127.0.0.1,19.0.0.0/8,10.0.0.0/8,172.16.0.0/12,.ford.com"
+        https_proxy = "http://internet.ford.com:83"
+        http_proxy = "http://internet.ford.com:83"
+        HTTPS_PROXY = "http://internet.ford.com:83"
+        HTTP_PROXY = "http://internet.ford.com:83"
+    }
+
+    stages {
+        stage('Copy latest build') {
+            steps {
+                copyArtifacts filter: 'build/libs/*.jar', fingerprintArtifacts: true, projectName: 'eu-geft-dev-build', selector: upstream(fallbackToLastSuccessful: true)
+            }
+        }
+        stage("Deploy to QA EDC1") {
+            steps {
+                script {
+                    deployToEnv('qa', 'qa', false, false, 'EDC1')
+                }
+            }
+        }
+        stage("Deploy to QA EDC2") {
+            steps {
+                script {
+                    deployToEnv('qa', 'qa', false, false, 'EDC2')
+                }
+            }
+        }
+        stage('Install Smoke Test Dependencies') {
+            steps {
+                dir('smoke-tests') {
+                    nodejs('NodeJS_14') {
+                        ansiColor('xterm') {
+                            sh "npm install -g newman"
+                            sh label: "Install", script: "npm ci"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Run Smoke Tests against QA') {
+            steps {
+                nodejs('NodeJS_14') {
+                    ansiColor('xterm') {
+                        sh "./run-newman.sh QA_via_AuthAgent"
+                    }
+                }
+                script {
+                    withCredentials([file(credentialsId: 'eu-geft-smoke-test-cred', variable: 'SMOKE_TEST_CRED')]) {
+                        sh """
+                        chmod -R 777 smoke-tests
+                        cp $SMOKE_TEST_CRED ./smoke-tests/tests/credential.json
+                        """
+                        runSmokeTests("QA")
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            step([$class: 'JUnitResultArchiver', testResults: 'smoke-tests/reports/*.xml,build/test-results/**/*.xml,src/main/webapp/junit.xml'])
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'smoke-tests/screenshots/**/*.png', followSymlinks: false
+            cleanWs()
+        }
+    }
+}
+
+def runSmokeTests(deployEnv) {
+    nodejs('NodeJS_14') {
+        ansiColor('xterm') {
+            dir('smoke-tests') {
+                retry(2) {
+                    sh label: "Run Tests", script: "DEPLOYMENT_ENV=${deployEnv} npm run test-ci"
+                }
+            }
+        }
+    }
+}
+
+def deployToEnv(envName = 'qa', name = 'qa', prod = false, rolling = true, clusterName = 'EDC1') {
+    def orgSuffix = prod ? 'Prod' : 'Preprod'
+    def ccHostPrefix = prod ? 'pd01' : 'pp01'
+    env.PCF_ENV_NAME = envName
+    env.PCF_NAME = name
+    env.PCF_ORG_SUFFIX = orgSuffix
+    env.PCF_CC_HOST_PREFIX = ccHostPrefix
+    env.PCF_CLUSTER_NAME = clusterName
+
+    deployToPcf(rolling)
+}
+
+def deployToPcf(rolling = true) {
+    withCredentials(
+            [usernamePassword(credentialsId: 'geft01', passwordVariable: 'CF_CCPASSWORD', usernameVariable: 'CF_CCUSER'),
+             file(credentialsId: 'eu-geft-config-server', variable: 'PRIVATE_KEY_FILE')]) {
+        echo 'Pushing to $PCF_CLUSTER_NAME $PCF_ENV_NAME'
+
+        setupConfigServer()
+        deploy(rolling)
+        autoScaleApplication()
+    }
+}
+
+def setupConfigServer() {
+    sh './jenkins-config-server-setup.sh $PCF_CLUSTER_NAME'
+}
+
+def deploy(rolling) {
+    retry(2) {
+        if (rolling) {
+            sh './jenkins-deploy-to-pcf.sh $PCF_CLUSTER_NAME "rolling"'
+        } else {
+            sh './jenkins-deploy-to-pcf.sh $PCF_CLUSTER_NAME'
+        }
+    }
+}
+
+def autoScaleApplication() {
+    echo 'Setup Autoscaling for $PCF_CLUSTER_NAME $PCF_ENV_NAME'
+
+    sh 'chmod a+x jenkins-auto-scaling-setup.sh'
+    sh './jenkins-auto-scaling-setup.sh $PCF_CLUSTER_NAME'
+}

@@ -1,0 +1,197 @@
+##
+# This file is to be used in conjunction with Homebrew.sh, install it from https://brew.sh
+# 
+# Once installed run `brew bundle` in this directory and brew will install all of the following packages that are not commented out
+# If you do not want a package to be installed, comment the line with a leading `#`
+##
+
+##
+# Preflight
+##
+
+# Tap homebrew
+tap 'homebrew/cask'
+tap 'homebrew/cask-drivers'
+tap 'homebrew/cask-fonts'
+tap 'homebrew/cask-versions'
+tap 'homebrew/core'
+tap 'homebrew/bundle'
+tap 'homebrew/services'
+
+##
+# Browsers
+#
+##
+
+# Firefox web browser
+cask 'firefox'
+
+# Firefox developer edition, which features programming tools.
+cask 'firefox-developer-edition'
+
+# Google Chrome web browser
+cask 'google-chrome'
+
+##
+# Chat
+#
+##
+
+# Webex Teams
+cask 'webex'
+
+##
+# Terminals
+#
+##
+
+# iTerm is our favorite terminal app.
+cask 'iterm2'
+
+##
+# Shells
+#
+##
+
+# Bash is the Bourne Again SHell. Bash is an sh-compatible shell.
+brew 'bash'
+
+# Programmable completion functions for bash
+brew 'bash-completion'
+
+# Fish shell.
+brew 'fish'
+
+##
+# System related
+#
+# These are fundamental operating system tools that we use often.
+##
+
+# The `z` command to `cd` among directories.
+brew 'zoxide'
+
+##
+# Command line system operator helpers
+##
+
+# Navi is a command line cheat sheet navigator
+brew 'denisidoro/tools/navi'
+
+# e.g. is a command line examples
+brew 'eg-examples'
+
+# TLDR provides simplified and community-driven man pages
+brew 'tldr'
+
+# howdoi shows instant coding answers via the command line
+brew 'howdoi'
+
+##
+# Text search
+#
+##
+
+# jq is a lightweight and flexible command-line JSON processor.
+brew 'jq'
+
+##
+# Server-Related
+##
+
+# Docker software containers to help distribute applications.
+#brew 'docker'
+#brew 'boot2docker'
+
+# Compose is a tool for defining and running multi-container Docker applications.
+#brew 'docker-compose'
+
+# Docker Machine installs Docker Engine on virtual hosts, and manages the hosts.
+#brew 'docker-machine'
+
+## Orchestration
+
+# Kubernetes Solo cluster for macOS.
+#cask 'kube-solo'
+
+# Kubernetes command-line tool to run commands against Kubernetes clusters.
+#brew 'kubectl'
+
+# Run a single-node Kubernetes cluster in a virtual machine on your personal computer.
+#brew 'minikube'
+
+# kubectx makes working with k8s easier
+#brew kubectx
+
+# Cloud Foundry CLI
+brew 'cloudfoundry/tap/cf-cli@7'
+
+##
+# Utilities
+#
+##
+
+# Helps in API development 
+cask 'postman'
+
+# thefuck retries failed commands with suggestions
+brew 'thefuck'
+
+# watch watches any command
+brew 'watch'
+
+# PlantUML markup text to diagram
+brew 'plantuml'
+
+# Clock Bar is a utility that displays a clock in the Touch Bar
+cask 'clock-bar'
+
+##
+# Programming languages
+#
+# This section installs many programming languages:
+# Clojure, Elixir, Erlang, Go, Haskell, Java, JavaScript,
+# Perl, Python, R, Ruby, Scala, Swift, and tooling.
+##
+
+## Java
+
+# Java programming language
+# We prefer open source package 'openjdk' over Oracle cask 'java'
+tap 'AdoptOpenJDK/openjdk'
+cask 'adoptopenjdk11'
+
+## JavaScript
+
+# Node.js is a JavaScript platform for building fast, scalable network app.
+brew 'node'
+
+# V8 JavaScript Engine.
+brew 'v8'
+
+# JSON output using the shell
+brew 'jo'
+
+# JID JSON explorer
+tap 'simeji/jid'
+brew 'jid'
+
+## Documentation
+
+# Dash documentation browser and code snippet manager
+cask 'dash'
+
+# Doxygen parses source code documenation annotations
+brew 'doxygen'
+
+## IDEs
+
+# Visual Studio Code
+cask 'visual-studio-code'
+
+# IntelliJ IDEA
+cask 'intellij-idea'
+
+## Sonarqube Sonar-scanner reports problems with scanned source code
+brew 'sonar-scanner'
+brew 'sonarqube'

@@ -1,0 +1,12 @@
+pluginManagement {
+    repositories {
+        maven { url 'https://www.nexus.ford.com/repository/external-proxy-group/' }
+        maven { url 'https://www.nexus.ford.com/repository/public' }
+        maven {
+            url "https://www.nexus.ford.com/repository/ford_community_release_repository/"
+        }
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'eu-geft'
